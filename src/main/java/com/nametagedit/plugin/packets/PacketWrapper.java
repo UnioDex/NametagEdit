@@ -32,7 +32,7 @@ public class PacketWrapper {
                 PacketAccessor.PACK_OPTION.set(packet, 1);
 
                 if (PacketAccessor.VISIBILITY != null) {
-                    PacketAccessor.VISIBILITY.set(packet, "always");
+                    PacketAccessor.VISIBILITY.set(packet, "never");
                 }
 
                 if (param == 0) {
