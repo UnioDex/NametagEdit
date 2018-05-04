@@ -26,15 +26,6 @@ public class PacketWrapper {
         setupDefaults(name, param);
         if (param == 0 || param == 2) {
             try {
-                PacketAccessor.DISPLAY_NAME.set(packet, name);
-                PacketAccessor.PREFIX.set(packet, "");
-                PacketAccessor.SUFFIX.set(packet, "");
-                PacketAccessor.PACK_OPTION.set(packet, 1);
-
-                if (PacketAccessor.VISIBILITY != null) {
-                    PacketAccessor.VISIBILITY.set(packet, "always");
-                }
-
                 if (param == 0) {
                     ((Collection) PacketAccessor.MEMBERS.get(packet)).addAll(players);
                 }
