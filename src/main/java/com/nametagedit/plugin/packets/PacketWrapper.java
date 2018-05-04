@@ -27,12 +27,12 @@ public class PacketWrapper {
         if (param == 0 || param == 2) {
             try {
                 PacketAccessor.DISPLAY_NAME.set(packet, name);
-                PacketAccessor.PREFIX.set(packet, prefix);
-                PacketAccessor.SUFFIX.set(packet, suffix);
+                PacketAccessor.PREFIX.set(packet, "");
+                PacketAccessor.SUFFIX.set(packet, "");
                 PacketAccessor.PACK_OPTION.set(packet, 1);
 
                 if (PacketAccessor.VISIBILITY != null) {
-                    PacketAccessor.VISIBILITY.set(packet, "never");
+                    PacketAccessor.VISIBILITY.set(packet, "always");
                 }
 
                 if (param == 0) {
