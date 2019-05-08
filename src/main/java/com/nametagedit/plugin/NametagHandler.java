@@ -5,7 +5,6 @@ import com.nametagedit.plugin.api.data.INametag;
 import com.nametagedit.plugin.api.data.PlayerData;
 import com.nametagedit.plugin.api.events.NametagEvent;
 import com.nametagedit.plugin.api.events.NametagFirstLoadedEvent;
-import com.nametagedit.plugin.metrics.Metrics;
 import com.nametagedit.plugin.storage.AbstractConfig;
 import com.nametagedit.plugin.storage.database.DatabaseConfig;
 import com.nametagedit.plugin.storage.flatfile.FlatFileConfig;
@@ -15,7 +14,6 @@ import com.nametagedit.plugin.utils.Utils;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.npc.NPCRegistry;
@@ -248,29 +246,22 @@ public class NametagHandler implements Listener {
 
         for (LivingEntity p : players) {
             if (p.getType().equals(EntityType.PLAYER)) {
+                Player player = (Player) p;
                 if (pots.contains(PotionEffectType.INVISIBILITY)) {
-                    if (isTagVisible.get(p)) {
-                        applyTagToPlayer((Player) p, false, false);
-                        isTagVisible.remove(p);
-                        isTagVisible.put((Player) p, false);
+                    if (isTagVisible.get(player)) {
+                        applyTagToPlayer(player, false, false);
+                        isTagVisible.remove(player);
+                        isTagVisible.put(player, false);
                     }
                 } else {
-                    if (!isTagVisible.get(p)) {
-                        applyTagToPlayer((Player) p, true, false);
-                        isTagVisible.remove(p);
-                        isTagVisible.put((Player) p, true);
+                    if (!isTagVisible.get(player)) {
+                        applyTagToPlayer(player, true, false);
+                        isTagVisible.remove(player);
+                        isTagVisible.put(player, true);
                     }
                 }
             }
         }
-    }
-
-    public void hideNametag(Player player) {
-
-    }
-
-    public void showNametag(Player player) {
-
     }
 
     private void handleClear(UUID uuid, String player) {
@@ -438,27 +429,23 @@ public class NametagHandler implements Listener {
         applyConfig();
         nametagManager.reset();
         abstractConfig.reload();
-        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-            @Override
-            public void run() {
-                if (plugin.citizens) {
-                    NPCRegistry npcRegistry = CitizensAPI.getNPCRegistry();
-                    if (npcRegistry == null) return;
-                    for (NPC npc : npcRegistry) {
-                        Entity npcEntity = npc.getEntity();
-                        if (npcEntity.getType().equals(EntityType.PLAYER)) {
-                            Player p = (Player) npcEntity;
-                            if (p != null) {
-                                if (p.getName().startsWith("NPC-")) {
-                                    getIsTagVisible().put(p, false);
-                                    applyTagToPlayer(p, false, false);
-                                }
+        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+            if (plugin.citizens) {
+                NPCRegistry npcRegistry = CitizensAPI.getNPCRegistry();
+                if (npcRegistry == null) return;
+                for (NPC npc : npcRegistry) {
+                    Entity npcEntity = npc.getEntity();
+                    if (npcEntity.getType().equals(EntityType.PLAYER)) {
+                        Player p = (Player) npcEntity;
+                        if (p != null) {
+                            if (p.getName().startsWith("NPC-")) {
+                                getIsTagVisible().put(p, false);
+                                applyTagToPlayer(p, false, false);
                             }
                         }
                     }
                 }
             }
-
         }, 10L);
     }
 
@@ -469,24 +456,11 @@ public class NametagHandler implements Listener {
         this.refreshTagOnWorldChange = config.getBoolean("RefreshTagOnWorldChange");
         DISABLE_PUSH_ALL_TAGS = config.getBoolean("DisablePush");
 
-        if (config.getBoolean("MetricsEnabled")) {
-            Metrics m = new Metrics(NametagEdit.getPlugin(NametagEdit.class));
-            m.addCustomChart(new Metrics.SimplePie("using_spigot", () -> PlaceholderAPIPlugin.getServerVersion().isSpigot() ? "yes" : "no"));
-        }
+        clearEmptyTeamTask = createTask("ClearEmptyTeamsInterval", clearEmptyTeamTask, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "nte teams clear"));
 
-        clearEmptyTeamTask = createTask("ClearEmptyTeamsInterval", clearEmptyTeamTask, new Runnable() {
-            @Override
-            public void run() {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "nte teams clear");
-            }
-        });
-
-        refreshNametagTask = createTask("RefreshInterval", refreshNametagTask, new Runnable() {
-            @Override
-            public void run() {
-                nametagManager.reset();
-                applyTags();
-            }
+        refreshNametagTask = createTask("RefreshInterval", refreshNametagTask, () -> {
+            nametagManager.reset();
+            applyTags();
         });
     }
 
@@ -567,14 +541,11 @@ public class NametagHandler implements Listener {
             return;
         }
 
-        UUIDFetcher.lookupUUID(player, plugin, new UUIDFetcher.UUIDLookup() {
-            @Override
-            public void response(UUID uuid) {
-                if (uuid == null) {
-                    NametagMessages.UUID_LOOKUP_FAILED.send(sender);
-                } else {
-                    handleClear(uuid, player);
-                }
+        UUIDFetcher.lookupUUID(player, plugin, uuid -> {
+            if (uuid == null) {
+                NametagMessages.UUID_LOOKUP_FAILED.send(sender);
+            } else {
+                handleClear(uuid, player);
             }
         });
     }
@@ -629,16 +600,13 @@ public class NametagHandler implements Listener {
         }
 
         final PlayerData finalData = data;
-        UUIDFetcher.lookupUUID(targetName, plugin, new UUIDFetcher.UUIDLookup() {
-            @Override
-            public void response(UUID uuid) {
-                if (uuid == null) {
-                    NametagMessages.UUID_LOOKUP_FAILED.send(sender);
-                } else {
-                    storePlayerData(uuid, finalData);
-                    finalData.setUuid(uuid);
-                    abstractConfig.save(finalData);
-                }
+        UUIDFetcher.lookupUUID(targetName, plugin, uuid -> {
+            if (uuid == null) {
+                NametagMessages.UUID_LOOKUP_FAILED.send(sender);
+            } else {
+                storePlayerData(uuid, finalData);
+                finalData.setUuid(uuid);
+                abstractConfig.save(finalData);
             }
         });
     }

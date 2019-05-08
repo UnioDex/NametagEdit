@@ -17,9 +17,6 @@ Tablist:
   # of Minecraft. Please report issues to our GitHub, and we'll try to help.
   LongTags: false
 #
-# If enabled, this plugin will send small data MCStats.org.
-MetricsEnabled: true
-#
 # If enabled, players with NametagEdit nametags will not be able to push each other (1.9+)
 DisablePush: false
 #
