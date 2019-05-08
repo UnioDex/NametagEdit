@@ -80,30 +80,23 @@ public class NametagEdit extends JavaPlugin {
             }
         }
 
-        Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-
-            @Override
-            public void run() {
-                if (citizens) {
-                    NPCRegistry npcRegistry = CitizensAPI.getNPCRegistry();
-                    if (npcRegistry == null) return;
-                    for (NPC npc : npcRegistry) {
-                        Entity npcEntity = npc.getEntity();
-                        if (npcEntity == null) continue;
-                        if (npcEntity.getType().equals(EntityType.PLAYER)) {
-                            Player p = (Player) npcEntity;
-                            if (p != null) {
-                                if (p.getName().startsWith("NPC-")) {
-                                    handler.getIsTagVisible().put(p, false);
-                                    handler.applyTagToPlayer(p, false, false);
-                                }
-                            }
+        if (citizens) {
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
+                NPCRegistry npcRegistry = CitizensAPI.getNPCRegistry();
+                if (npcRegistry == null) return;
+                for (NPC npc : npcRegistry) {
+                    Entity npcEntity = npc.getEntity();
+                    if (npcEntity == null) continue;
+                    if (npcEntity.getType().equals(EntityType.PLAYER)) {
+                        Player p = (Player) npcEntity;
+                        if (p.getName().startsWith("NPC-")) {
+                            handler.getIsTagVisible().put(p, false);
+                            handler.applyTagToPlayer(p, false, false);
                         }
                     }
                 }
-            }
-
-        }, 10L);
+            }, 100L);
+        }
     }
 
     @Override

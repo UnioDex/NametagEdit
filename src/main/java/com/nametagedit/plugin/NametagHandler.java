@@ -435,13 +435,12 @@ public class NametagHandler implements Listener {
                 if (npcRegistry == null) return;
                 for (NPC npc : npcRegistry) {
                     Entity npcEntity = npc.getEntity();
+                    if (npcEntity == null) continue;
                     if (npcEntity.getType().equals(EntityType.PLAYER)) {
                         Player p = (Player) npcEntity;
-                        if (p != null) {
-                            if (p.getName().startsWith("NPC-")) {
-                                getIsTagVisible().put(p, false);
-                                applyTagToPlayer(p, false, false);
-                            }
+                        if (p.getName().startsWith("NPC-")) {
+                            getIsTagVisible().put(p, false);
+                            applyTagToPlayer(p, false, false);
                         }
                     }
                 }

@@ -47,9 +47,15 @@ public class PacketWrapper {
         if (param == 0 || param == 2) {
             try {
                 if (PacketAccessor.isLegacyVersion()) {
-                    PacketAccessor.DISPLAY_NAME.set(packet, name);
-                    PacketAccessor.PREFIX.set(packet, prefix);
-                    PacketAccessor.SUFFIX.set(packet, suffix);
+                    if (!visible) {
+                        PacketAccessor.DISPLAY_NAME.set(packet, "");
+                        PacketAccessor.PREFIX.set(packet, "");
+                        PacketAccessor.SUFFIX.set(packet, "");
+                    }else {
+                        PacketAccessor.DISPLAY_NAME.set(packet, name);
+                        PacketAccessor.PREFIX.set(packet, prefix);
+                        PacketAccessor.SUFFIX.set(packet, suffix);
+                    }
                 } else {
                     String color = ChatColor.getLastColors(prefix);
                     String colorCode = null;
@@ -77,7 +83,11 @@ public class PacketWrapper {
                 PacketAccessor.PACK_OPTION.set(packet, 1);
 
                 if (PacketAccessor.VISIBILITY != null) {
-                    PacketAccessor.VISIBILITY.set(packet, "always");
+                    if (visible) {
+                        PacketAccessor.VISIBILITY.set(packet, "always");
+                    }else {
+                        PacketAccessor.VISIBILITY.set(packet, "never");
+                    }
                 }
 
                 if (param == 0) {

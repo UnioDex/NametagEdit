@@ -123,6 +123,10 @@ public class NametagManager {
     }
 
     void setNametag(String player, String prefix, String suffix, int sortPriority, boolean playerTag, boolean visible) {
+        if (!visible) {
+            addPlayerToTeam(player, "", "", sortPriority, playerTag, false);
+            return;
+        }
         addPlayerToTeam(player, prefix != null ? prefix : "", suffix != null ? suffix : "", sortPriority, playerTag, visible);
     }
 
