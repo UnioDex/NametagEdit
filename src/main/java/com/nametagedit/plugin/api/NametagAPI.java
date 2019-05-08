@@ -41,7 +41,7 @@ public final class NametagAPI implements INametagApi {
     @Override
     public void reloadNametag(Player player) {
         if (shouldFireEvent(player, NametagEvent.ChangeType.RELOAD)) {
-            handler.applyTagToPlayer(player, false);
+            handler.applyTagToPlayer(player, true, false);
         }
     }
 
@@ -65,13 +65,13 @@ public final class NametagAPI implements INametagApi {
     @Override
     public void setPrefix(String player, String prefix) {
         FakeTeam fakeTeam = manager.getFakeTeam(player);
-        manager.setNametag(player, prefix, fakeTeam == null ? null : fakeTeam.getSuffix());
+        manager.setNametag(player, prefix, fakeTeam == null ? null : fakeTeam.getSuffix(), true);
     }
 
     @Override
     public void setSuffix(String player, String suffix) {
         FakeTeam fakeTeam = manager.getFakeTeam(player);
-        manager.setNametag(player, fakeTeam == null ? null : fakeTeam.getPrefix(), suffix);
+        manager.setNametag(player, fakeTeam == null ? null : fakeTeam.getPrefix(), suffix, true);
     }
 
     @Override
@@ -81,7 +81,7 @@ public final class NametagAPI implements INametagApi {
 
     @Override
     public void setNametag(String player, String prefix, String suffix) {
-        manager.setNametag(player, prefix, suffix);
+        manager.setNametag(player, prefix, suffix, true);
     }
 
     /**
@@ -105,7 +105,7 @@ public final class NametagAPI implements INametagApi {
         NametagEvent event = new NametagEvent(player.getName(), prefix, nametag, NametagEvent.ChangeType.UNKNOWN);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) return;
-        manager.setNametag(player.getName(), nametag.getPrefix(), nametag.getSuffix());
+        manager.setNametag(player.getName(), nametag.getPrefix(), nametag.getSuffix(), true);
     }
 
 }

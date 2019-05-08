@@ -20,7 +20,7 @@ public class HookLibsDisguise implements Listener {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    plugin.getHandler().applyTagToPlayer((Player) event.getEntity(), false);
+                    plugin.getHandler().applyTagToPlayer((Player) event.getEntity(), true, false);
                 }
             }.runTaskLater(plugin, 3);
         }

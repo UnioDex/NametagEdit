@@ -23,14 +23,16 @@ public class FakeTeam {
     private String name;
     private String prefix = "";
     private String suffix = "";
+    private boolean isVisible;
 
-    public FakeTeam(String prefix, String suffix, int sortPriority, boolean playerTag) {
+    public FakeTeam(String prefix, String suffix, int sortPriority, boolean playerTag, boolean isVisible) {
         this.name = UNIQUE_ID + "_" + getNameFromInput(sortPriority) + ++ID + (playerTag ? "+P" : "");
         // It is possible the names of the Team exceeded the length of 16 in the past,
         // and caused crashes as a result. This is a layer of protection against that.
         this.name = this.name.length() > 16 ? this.name.substring(0, 16) : this.name;
         this.prefix = prefix;
         this.suffix = suffix;
+        this.isVisible = isVisible;
     }
 
     public void addMember(String player) {
@@ -39,8 +41,8 @@ public class FakeTeam {
         }
     }
 
-    public boolean isSimilar(String prefix, String suffix) {
-        return this.prefix.equals(prefix) && this.suffix.equals(suffix);
+    public boolean isSimilar(String prefix, String suffix, boolean isVisible) {
+        return this.prefix.equals(prefix) && this.suffix.equals(suffix) && this.isVisible == isVisible;
     }
 
     /**

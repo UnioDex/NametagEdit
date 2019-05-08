@@ -13,7 +13,7 @@ public class HookZPermissions implements Listener {
 
     @EventHandler
     public void onZPermissionsRankChangeEvent(ZPermissionsPlayerUpdateEvent event) {
-        handler.applyTagToPlayer(event.getPlayer(), false);
+        handler.applyTagToPlayer(event.getPlayer(), true, false);
     }
 
 }

@@ -72,7 +72,7 @@ public class PlayerLoader extends BukkitRunnable {
                             }
                         }
 
-                        handler.applyTagToPlayer(player, loggedIn);
+                        handler.applyTagToPlayer(player, true, loggedIn);
                     }
                 }
             }.runTask(plugin);

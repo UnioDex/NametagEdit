@@ -72,7 +72,7 @@ public class FlatFileConfig implements AbstractConfig {
     @Override
     public void load(Player player, boolean loggedIn) {
         loadPlayerTag(player);
-        plugin.getHandler().applyTagToPlayer(player, loggedIn);
+        plugin.getHandler().applyTagToPlayer(player, true, loggedIn);
     }
 
     @Override

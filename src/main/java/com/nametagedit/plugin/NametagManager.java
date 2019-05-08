@@ -21,9 +21,9 @@ public class NametagManager {
      * If there is no team similar to this, then a new
      * team is created.
      */
-    private FakeTeam getFakeTeam(String prefix, String suffix) {
+    private FakeTeam getFakeTeam(String prefix, String suffix, boolean visible) {
         for (FakeTeam fakeTeam : TEAMS.values()) {
-            if (fakeTeam.isSimilar(prefix, suffix)) {
+            if (fakeTeam.isSimilar(prefix, suffix, visible)) {
                 return fakeTeam;
             }
         }
@@ -35,35 +35,35 @@ public class NametagManager {
      * Adds a player to a FakeTeam. If they are already on this team,
      * we do NOT change that.
      */
-    private void addPlayerToTeam(String player, String prefix, String suffix, int sortPriority, boolean playerTag) {
+    private void addPlayerToTeam(String player, String prefix, String suffix, int sortPriority, boolean playerTag, boolean visible) {
         FakeTeam previous = getFakeTeam(player);
 
-        if (previous != null && previous.isSimilar(prefix, suffix)) {
+        if (previous != null && previous.isSimilar(prefix, suffix, visible)) {
             plugin.debug(player + " already belongs to a similar team (" + previous.getName() + ")");
             return;
         }
 
         reset(player);
 
-        FakeTeam joining = getFakeTeam(prefix, suffix);
+        FakeTeam joining = getFakeTeam(prefix, suffix, visible);
         if (joining != null) {
             joining.addMember(player);
             plugin.debug("Using existing team for " + player);
         } else {
-            joining = new FakeTeam(prefix, suffix, sortPriority, playerTag);
+            joining = new FakeTeam(prefix, suffix, sortPriority, playerTag, visible);
             joining.addMember(player);
             TEAMS.put(joining.getName(), joining);
-            addTeamPackets(joining);
+            addTeamPackets(joining, visible);
             plugin.debug("Created FakeTeam " + joining.getName() + ". Size: " + TEAMS.size());
         }
 
         Player adding = Bukkit.getPlayerExact(player);
         if (adding != null) {
-            addPlayerToTeamPackets(joining, adding.getName());
+            addPlayerToTeamPackets(joining, adding.getName(), visible);
             cache(adding.getName(), joining);
         } else {
             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player);
-            addPlayerToTeamPackets(joining, offlinePlayer.getName());
+            addPlayerToTeamPackets(joining, offlinePlayer.getName(), visible);
             cache(offlinePlayer.getName(), joining);
         }
 
@@ -79,15 +79,15 @@ public class NametagManager {
             boolean delete;
             Player removing = Bukkit.getPlayerExact(player);
             if (removing != null) {
-                delete = removePlayerFromTeamPackets(fakeTeam, removing.getName());
+                delete = removePlayerFromTeamPackets(fakeTeam, fakeTeam.isVisible(), removing.getName());
             } else {
                 OfflinePlayer toRemoveOffline = Bukkit.getOfflinePlayer(player);
-                delete = removePlayerFromTeamPackets(fakeTeam, toRemoveOffline.getName());
+                delete = removePlayerFromTeamPackets(fakeTeam, fakeTeam.isVisible(), toRemoveOffline.getName());
             }
 
             plugin.debug(player + " was removed from " + fakeTeam.getName());
             if (delete) {
-                removeTeamPackets(fakeTeam);
+                removeTeamPackets(fakeTeam, fakeTeam.isVisible());
                 TEAMS.remove(fakeTeam.getName());
                 plugin.debug("FakeTeam " + fakeTeam.getName() + " has been deleted. Size: " + TEAMS.size());
             }
@@ -114,28 +114,28 @@ public class NametagManager {
     // ==============================================================
     // Below are public methods to modify certain data
     // ==============================================================
-    public void setNametag(String player, String prefix, String suffix) {
-        setNametag(player, prefix, suffix, -1);
+    public void setNametag(String player, String prefix, String suffix, boolean visible) {
+        setNametag(player, prefix, suffix, -1, visible);
     }
 
-    void setNametag(String player, String prefix, String suffix, int sortPriority) {
-        setNametag(player, prefix, suffix, sortPriority, false);
+    void setNametag(String player, String prefix, String suffix, int sortPriority, boolean visible) {
+        setNametag(player, prefix, suffix, sortPriority, false, visible);
     }
 
-    void setNametag(String player, String prefix, String suffix, int sortPriority, boolean playerTag) {
-        addPlayerToTeam(player, prefix != null ? prefix : "", suffix != null ? suffix : "", sortPriority, playerTag);
+    void setNametag(String player, String prefix, String suffix, int sortPriority, boolean playerTag, boolean visible) {
+        addPlayerToTeam(player, prefix != null ? prefix : "", suffix != null ? suffix : "", sortPriority, playerTag, visible);
     }
 
     void sendTeams(Player player) {
         for (FakeTeam fakeTeam : TEAMS.values()) {
-            new PacketWrapper(fakeTeam.getName(), fakeTeam.getPrefix(), fakeTeam.getSuffix(), 0, fakeTeam.getMembers()).send(player);
+            new PacketWrapper(fakeTeam.getName(), fakeTeam.getPrefix(), fakeTeam.getSuffix(), 0, fakeTeam.getMembers(), fakeTeam.isVisible()).send(player);
         }
     }
 
     void reset() {
         for (FakeTeam fakeTeam : TEAMS.values()) {
-            removePlayerFromTeamPackets(fakeTeam, fakeTeam.getMembers());
-            removeTeamPackets(fakeTeam);
+            removePlayerFromTeamPackets(fakeTeam, fakeTeam.getMembers(), fakeTeam.isVisible());
+            removeTeamPackets(fakeTeam, fakeTeam.isVisible());
         }
         CACHED_FAKE_TEAMS.clear();
         TEAMS.clear();
@@ -144,26 +144,26 @@ public class NametagManager {
     // ==============================================================
     // Below are private methods to construct a new Scoreboard packet
     // ==============================================================
-    private void removeTeamPackets(FakeTeam fakeTeam) {
-        new PacketWrapper(fakeTeam.getName(), fakeTeam.getPrefix(), fakeTeam.getSuffix(), 1, new ArrayList<>()).send();
+    private void removeTeamPackets(FakeTeam fakeTeam, boolean visible) {
+        new PacketWrapper(fakeTeam.getName(), fakeTeam.getPrefix(), fakeTeam.getSuffix(), 1, new ArrayList<>(), visible).send();
     }
 
-    private boolean removePlayerFromTeamPackets(FakeTeam fakeTeam, String... players) {
-        return removePlayerFromTeamPackets(fakeTeam, Arrays.asList(players));
+    private boolean removePlayerFromTeamPackets(FakeTeam fakeTeam, boolean visible, String... players) {
+        return removePlayerFromTeamPackets(fakeTeam, Arrays.asList(players), visible);
     }
 
-    private boolean removePlayerFromTeamPackets(FakeTeam fakeTeam, List<String> players) {
-        new PacketWrapper(fakeTeam.getName(), 4, players).send();
+    private boolean removePlayerFromTeamPackets(FakeTeam fakeTeam, List<String> players, boolean visible) {
+        new PacketWrapper(fakeTeam.getName(), 4, players, visible).send();
         fakeTeam.getMembers().removeAll(players);
         return fakeTeam.getMembers().isEmpty();
     }
 
-    private void addTeamPackets(FakeTeam fakeTeam) {
-        new PacketWrapper(fakeTeam.getName(), fakeTeam.getPrefix(), fakeTeam.getSuffix(), 0, fakeTeam.getMembers()).send();
+    private void addTeamPackets(FakeTeam fakeTeam, boolean visible) {
+        new PacketWrapper(fakeTeam.getName(), fakeTeam.getPrefix(), fakeTeam.getSuffix(), 0, fakeTeam.getMembers(), visible).send();
     }
 
-    private void addPlayerToTeamPackets(FakeTeam fakeTeam, String player) {
-        new PacketWrapper(fakeTeam.getName(), 3, Collections.singletonList(player)).send();
+    private void addPlayerToTeamPackets(FakeTeam fakeTeam, String player, boolean visible) {
+        new PacketWrapper(fakeTeam.getName(), 3, Collections.singletonList(player), visible).send();
     }
 
 }
