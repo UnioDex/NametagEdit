@@ -13,8 +13,8 @@ import java.util.List;
 
 public class PacketWrapper {
 
-	public String error;
-	private Object packet = PacketAccessor.createPacket();
+    public String error;
+    private Object packet = PacketAccessor.createPacket();
 
     private static Constructor<?> ChatComponentText;
     private static Class<? extends Enum> typeEnumChatFormat;
@@ -33,13 +33,13 @@ public class PacketWrapper {
         }
     }
 
-	public PacketWrapper(String name, int param, List<String> members, boolean visible) {
-		if (param != 3 && param != 4) {
-			throw new IllegalArgumentException("Method must be join or leave for player constructor");
-		}
-		setupDefaults(name, param, visible);
-		setupMembers(members);
-	}
+    public PacketWrapper(String name, int param, List<String> members, boolean visible) {
+        if (param != 3 && param != 4) {
+            throw new IllegalArgumentException("Method must be join or leave for player constructor");
+        }
+        setupDefaults(name, param, visible);
+        setupMembers(members);
+    }
 
     @SuppressWarnings("unchecked")
     public PacketWrapper(String name, String prefix, String suffix, int param, Collection<?> players, boolean visible) {
@@ -89,43 +89,43 @@ public class PacketWrapper {
         }
     }
 
-	@SuppressWarnings("unchecked")
-	private void setupMembers(Collection<?> players) {
-		try {
-			players = players == null || players.isEmpty() ? new ArrayList<>() : players;
-			((Collection) PacketAccessor.MEMBERS.get(packet)).addAll(players);
-		} catch (Exception e) {
-			error = e.getMessage();
-		}
-	}
+    @SuppressWarnings("unchecked")
+    private void setupMembers(Collection<?> players) {
+        try {
+            players = players == null || players.isEmpty() ? new ArrayList<>() : players;
+            ((Collection) PacketAccessor.MEMBERS.get(packet)).addAll(players);
+        } catch (Exception e) {
+            error = e.getMessage();
+        }
+    }
 
-	private void setupDefaults(String name, int param, boolean visible) {
-		try {
-			PacketAccessor.TEAM_NAME.set(packet, name);
-			PacketAccessor.PARAM_INT.set(packet, param);
+    private void setupDefaults(String name, int param, boolean visible) {
+        try {
+            PacketAccessor.TEAM_NAME.set(packet, name);
+            PacketAccessor.PARAM_INT.set(packet, param);
 
-			if (PacketAccessor.VISIBILITY != null) {
-				if (visible) {
-					PacketAccessor.VISIBILITY.set(packet, "always");
-				}else {
-					PacketAccessor.VISIBILITY.set(packet, "never");
-				}
+            if (PacketAccessor.VISIBILITY != null) {
+                if (visible) {
+                    PacketAccessor.VISIBILITY.set(packet, "always");
+                } else {
+                    PacketAccessor.VISIBILITY.set(packet, "never");
+                }
             }
 
-			if (NametagHandler.DISABLE_PUSH_ALL_TAGS && PacketAccessor.PUSH != null) {
-				PacketAccessor.PUSH.set(packet, "never");
-			}
-		} catch (Exception e) {
-			error = e.getMessage();
-		}
-	}
+            if (NametagHandler.DISABLE_PUSH_ALL_TAGS && PacketAccessor.PUSH != null) {
+                PacketAccessor.PUSH.set(packet, "never");
+            }
+        } catch (Exception e) {
+            error = e.getMessage();
+        }
+    }
 
-	public void send() {
-		PacketAccessor.sendPacket(Utils.getOnline(), packet);
-	}
+    public void send() {
+        PacketAccessor.sendPacket(Utils.getOnline(), packet);
+    }
 
-	public void send(Player player) {
-		PacketAccessor.sendPacket(player, packet);
-	}
+    public void send(Player player) {
+        PacketAccessor.sendPacket(player, packet);
+    }
 
 }
