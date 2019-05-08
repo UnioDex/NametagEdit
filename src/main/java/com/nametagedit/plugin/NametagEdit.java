@@ -96,6 +96,7 @@ public class NametagEdit extends JavaPlugin {
 					if (npcRegistry == null) return;
 					for (NPC npc : npcRegistry) {
 						Entity npcEntity = npc.getEntity();
+						if (npcEntity == null) continue;
 						if (npcEntity.getType().equals(EntityType.PLAYER)) {
 							Player p = (Player) npcEntity;
 							if (p != null) { 
