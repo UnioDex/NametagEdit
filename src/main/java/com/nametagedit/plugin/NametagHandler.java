@@ -610,4 +610,41 @@ public class NametagHandler implements Listener {
         });
     }
 
+    void save(final CommandSender sender, String targetName, NametagEvent.ChangeType changeType, String value, int priority) {
+        Player player = Bukkit.getPlayerExact(targetName);
+
+        PlayerData data = getPlayerData(player);
+        if (data == null) {
+            data = new PlayerData(targetName, null, "", "", priority);
+            if (player != null) {
+                storePlayerData(player.getUniqueId(), data);
+            }
+        }
+
+        if (changeType == NametagEvent.ChangeType.PREFIX) {
+            data.setPrefix(value);
+        } else {
+            data.setSuffix(value);
+        }
+        data.setSortPriority(priority);
+
+        if (player != null) {
+            applyTagToPlayer(player, true, false);
+            data.setUuid(player.getUniqueId());
+            abstractConfig.save(data);
+            return;
+        }
+
+        final PlayerData finalData = data;
+        UUIDFetcher.lookupUUID(targetName, plugin, uuid -> {
+            if (uuid == null) {
+                NametagMessages.UUID_LOOKUP_FAILED.send(sender);
+            } else {
+                storePlayerData(uuid, finalData);
+                finalData.setUuid(uuid);
+                abstractConfig.save(finalData);
+            }
+        });
+    }
+
 }

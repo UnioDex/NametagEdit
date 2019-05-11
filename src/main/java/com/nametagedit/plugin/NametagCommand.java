@@ -262,6 +262,21 @@ public class NametagCommand implements CommandExecutor, TabExecutor {
             handler.clear(sender, targetName);
             handler.applyTagToPlayer(Bukkit.getPlayerExact(targetName), true, false);
         } else if (args.length >= 4) {
+            if (args.length >= 5) {
+                if (isNotPermissed(sender, "nametagedit.edit.self")) return;
+
+                String targetName = args[1];
+
+                if (!sender.hasPermission("nametagedit.edit.others") && !targetName.equalsIgnoreCase(sender.getName())) {
+                    NametagMessages.MODIFY_OWN_TAG.send(sender);
+                    return;
+                }
+
+                NametagEvent.ChangeType changeType = args[2].equalsIgnoreCase("prefix") ? NametagEvent.ChangeType.PREFIX : NametagEvent.ChangeType.SUFFIX;
+                handler.save(sender, targetName, changeType, Utils.format(args, 4, args.length), Integer.valueOf(args[3]));
+                return;
+            }
+
             switch (args[2].toLowerCase()) {
                 case "prefix":
                 case "suffix":
